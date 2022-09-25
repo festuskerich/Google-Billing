@@ -10,14 +10,20 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.android.billingclient.api.AcknowledgePurchaseParams;
+import com.android.billingclient.api.AcknowledgePurchaseResponseListener;
 import com.android.billingclient.api.BillingClient;
 import com.android.billingclient.api.BillingClientStateListener;
 import com.android.billingclient.api.BillingFlowParams;
 import com.android.billingclient.api.BillingResult;
-import com.android.billingclient.api.ConsumeParams;
+import com.android.billingclient.api.ProductDetails;
+import com.android.billingclient.api.ProductDetailsResponseListener;
 import com.android.billingclient.api.Purchase;
+import com.android.billingclient.api.PurchasesResponseListener;
 import com.android.billingclient.api.PurchasesUpdatedListener;
-import com.android.billingclient.api.SkuDetailsParams;
+import com.android.billingclient.api.QueryProductDetailsParams;
+import com.android.billingclient.api.QueryPurchasesParams;
+import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -60,10 +66,21 @@ public class MainActivity extends AppCompatActivity implements PurchasesUpdatedL
 
             @Override
             public void onBillingSetupFinished(@NonNull BillingResult billingResult) {
-                List<Purchase> purchasesList = billingClient.queryPurchases(BillingClient.SkuType.INAPP).getPurchasesList();
-                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                    handlePurchases(purchasesList);
-                }
+                billingClient.queryPurchasesAsync(
+                        QueryPurchasesParams.newBuilder()
+                                .setProductType(BillingClient.ProductType.SUBS)
+                                .build(),
+                        new PurchasesResponseListener() {
+                            public void onQueryPurchasesResponse(@NonNull BillingResult billingResult, @NonNull List purchases) {
+                                // check billingResult
+                                // process returned purchase list, e.g. display the plans user owns
+                                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                                    handlePurchases(purchases);
+                                }
+
+                            }
+                        }
+                );
             }
         });
         ArrayAdapter<String> arrayAdapter2 = new ArrayAdapter<>(this, R.layout.item, purchaseItemDisplay);
@@ -84,10 +101,22 @@ public class MainActivity extends AppCompatActivity implements PurchasesUpdatedL
                 public void onBillingSetupFinished(@NonNull BillingResult billingResult) {
                     if (billingResult.getResponseCode() == 0) {
                         initiatePurchase(purchaseItemIDs.get(i));
-                        List<Purchase> purchasesList = billingClient.queryPurchases(BillingClient.SkuType.INAPP).getPurchasesList();
-                        if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                            handlePurchases(purchasesList);
-                        }
+                        billingClient.queryPurchasesAsync(
+                                QueryPurchasesParams.newBuilder()
+                                        .setProductType(BillingClient.ProductType.SUBS)
+                                        .build(),
+                                new PurchasesResponseListener() {
+                                    public void onQueryPurchasesResponse(@NonNull BillingResult billingResult, @NonNull List purchases) {
+                                        // check billingResult
+                                        // process returned purchase list, e.g. display the plans user owns
+                                        if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                                            handlePurchases(purchases);
+                                        }
+
+                                    }
+                                }
+                        );
+
                         return;
                     }
                     Toast.makeText(getApplicationContext(), "Error " + billingResult.getDebugMessage(), Toast.LENGTH_LONG).show();
@@ -121,36 +150,72 @@ public class MainActivity extends AppCompatActivity implements PurchasesUpdatedL
     }
 
     public void initiatePurchase(final String str) {
-        List<String> skuList = new ArrayList<>();
-        skuList.add(str);
-        SkuDetailsParams.Builder params = SkuDetailsParams.newBuilder();
-        params.setSkusList(skuList).setType(BillingClient.SkuType.INAPP);
-        billingClient.querySkuDetailsAsync(params.build(),
-                (billingResult, skuDetailsList) -> {
+        QueryProductDetailsParams queryProductDetailsParams =
+                QueryProductDetailsParams
+                        .newBuilder()
+                        .setProductList(
+                                ImmutableList.of(
+                                        QueryProductDetailsParams.Product.newBuilder()
+                                                .setProductId(str)
+                                                .setProductType(BillingClient.ProductType.SUBS)
+                                                .build()))
+                        .build();
+
+        billingClient.queryProductDetailsAsync(
+                queryProductDetailsParams,
+                (billingResult, productDetailsList) -> {
                     if (billingResult.getResponseCode() != 0) {
                         Log.e("billingResult"," Error " + billingResult.getDebugMessage());
-                    } else if (skuDetailsList == null || skuDetailsList.size() <= 0) {
+                    } else if (productDetailsList == null || productDetailsList.size() <= 0) {
                         Log.e("skuDetailsList", "Purchase Item " + str + " not Found");
                     } else {
-                        Log.i( "ZERO MF","more than zero  "+skuDetailsList.size());
-                        billingClient.launchBillingFlow(MainActivity.this,
-                                BillingFlowParams
-                                        .newBuilder()
-                                        .setSkuDetails(skuDetailsList.get(0))
-                                        .build());
+                        Log.i( "ZERO MF","more than zero  "+productDetailsList.size());
+                        for (int i=0;i<productDetailsList.size();i++){
+                            BillingFlowParams billingFlowParams = BillingFlowParams.newBuilder()
+                                    .setProductDetailsParamsList(ImmutableList.of(
+                                            BillingFlowParams.ProductDetailsParams.newBuilder()
+                                                    // retrieve a value for "productDetails" by calling queryProductDetailsAsync()
+                                                    .setProductDetails(productDetailsList.get(i))
+                                                    // to get an offer token, call ProductDetails.getSubscriptionOfferDetails()
+                                                    // for a list of offers that are available to the user
+                                                    .setOfferToken(productDetailsList.get(i).getSubscriptionOfferDetails().get(i).getOfferToken())
+                                                    .build()
+                                    ))
+                                    .build();
+
+                            // Launch the billing flow
+                            billingClient.launchBillingFlow(MainActivity.this, billingFlowParams);
+
+                        }
+
                     }
-                });
+                }
+        );
+
     }
 
     @Override
     public void onPurchasesUpdated(BillingResult billingResult, List<Purchase> list) {
-        if (billingResult.getResponseCode() == 0 && list != null) {
+        if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK
+                && list != null) {
             handlePurchases(list);
         } else if (billingResult.getResponseCode() == 7) {
-            List<Purchase> purchasesList = this.billingClient.queryPurchases(BillingClient.SkuType.INAPP).getPurchasesList();
-            if (purchasesList != null) {
-                handlePurchases(purchasesList);
-            }
+           this.billingClient.queryPurchasesAsync(
+                    QueryPurchasesParams.newBuilder()
+                            .setProductType(BillingClient.ProductType.SUBS)
+                            .build(),
+                    new PurchasesResponseListener() {
+                        public void onQueryPurchasesResponse(@NonNull BillingResult billingResult, @NonNull List purchases) {
+                            // check billingResult
+                            // process returned purchase list, e.g. display the plans user owns
+                            if (purchases != null) {
+                                handlePurchases(purchases);
+                            }
+
+                        }
+                    }
+            );
+
         } else if (billingResult.getResponseCode() == 1) {
             Toast.makeText(getApplicationContext(), "Purchase Canceled", Toast.LENGTH_SHORT).show();
         } else {
@@ -160,19 +225,24 @@ public class MainActivity extends AppCompatActivity implements PurchasesUpdatedL
 
     public void handlePurchases(List<Purchase> list) {
         for (Purchase next : list) {
-            final int indexOf = purchaseItemIDs.indexOf(next.getSku());
+            final int indexOf = purchaseItemIDs.indexOf(next.getPurchaseToken());
             if (indexOf > -1) {
                 if (next.getPurchaseState() == 1) {
                     if (!verifyValidSignature(next.getOriginalJson(), next.getSignature())) {
                         Toast.makeText(getApplicationContext(), "Error : Invalid Purchase", Toast.LENGTH_SHORT).show();
                     } else if (!next.isAcknowledged()) {
-                        this.billingClient.consumeAsync(ConsumeParams.newBuilder()
-                                .setPurchaseToken(next.getPurchaseToken())
-                                .build(), (billingResult, str) -> {
-                            if (billingResult.getResponseCode() == 0) {
-                                savePurchaseCountValueToPref(purchaseItemIDs.get(indexOf), getPurchaseCountValueFromPref(purchaseItemIDs.get(indexOf)) + 1);
-                                Toast.makeText(getApplicationContext(), "Item " + purchaseItemIDs.get(indexOf) + "Consumed", Toast.LENGTH_SHORT).show();
-                                MainActivity.this.notifyList();
+                        AcknowledgePurchaseParams acknowledgePurchaseParams =
+                                AcknowledgePurchaseParams.newBuilder()
+                                        .setPurchaseToken(next.getPurchaseToken())
+                                        .build();
+                        billingClient.acknowledgePurchase(acknowledgePurchaseParams, new AcknowledgePurchaseResponseListener() {
+                            @Override
+                            public void onAcknowledgePurchaseResponse(@NonNull BillingResult billingResult) {
+                                if (billingResult.getResponseCode() == 0) {
+                                    savePurchaseCountValueToPref(purchaseItemIDs.get(indexOf), getPurchaseCountValueFromPref(purchaseItemIDs.get(indexOf)) + 1);
+                                    Toast.makeText(getApplicationContext(), "Item " + purchaseItemIDs.get(indexOf) + "Consumed", Toast.LENGTH_SHORT).show();
+                                    MainActivity.this.notifyList();
+                                }
                             }
                         });
                     }
