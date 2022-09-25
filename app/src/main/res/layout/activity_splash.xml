@@ -8,7 +8,7 @@
     android:id="@+id/click"
     android:background="@mipmap/ic_launcher_round"
     android:layout_height="match_parent"
-    tools:context=".Splash">
+    tools:context="com.kericho.myapplication.Splash">
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

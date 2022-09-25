@@ -1,4 +1,4 @@
-package com.feroda.ferodajuice;
+package com.kericho.myapplication;
 
 import android.content.Context;
 

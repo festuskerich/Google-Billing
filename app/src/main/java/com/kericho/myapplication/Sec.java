@@ -1,4 +1,4 @@
-package com.feroda.ferodajuice;
+package com.kericho.myapplication;
 
 import android.text.TextUtils;
 import android.util.Base64;

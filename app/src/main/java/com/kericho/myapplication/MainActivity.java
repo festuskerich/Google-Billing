@@ -1,23 +1,23 @@
-package com.feroda.ferodajuice;
+package com.kericho.myapplication;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
 import com.android.billingclient.api.AcknowledgePurchaseParams;
-import com.android.billingclient.api.AcknowledgePurchaseResponseListener;
 import com.android.billingclient.api.BillingClient;
 import com.android.billingclient.api.BillingClientStateListener;
 import com.android.billingclient.api.BillingFlowParams;
 import com.android.billingclient.api.BillingResult;
-import com.android.billingclient.api.ProductDetails;
-import com.android.billingclient.api.ProductDetailsResponseListener;
 import com.android.billingclient.api.Purchase;
 import com.android.billingclient.api.PurchasesResponseListener;
 import com.android.billingclient.api.PurchasesUpdatedListener;
@@ -25,7 +25,6 @@ import com.android.billingclient.api.QueryProductDetailsParams;
 import com.android.billingclient.api.QueryPurchasesParams;
 import com.google.common.collect.ImmutableList;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,13 +44,19 @@ public class MainActivity extends AppCompatActivity implements PurchasesUpdatedL
     public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
         setContentView(R.layout.activity_main);
-        purchaseItemIDs.add("lemon");
-        purchaseItemIDs.add("mellon");
-        purchaseItemIDs.add("nanasi");
-        purchaseItemIDs.add("chungwa");
+        purchaseItemIDs.clear();
+        purchaseItemIDs.add("exel");
+        purchaseItemIDs.add("one");
+        purchaseItemIDs.add("prem");
+        purchaseItemIDs.add("two");
+        purchaseItemIDs.add("three");
+        purchaseItemIDs.add("four");
+        purchaseItemIDs.add("five");
+        purchaseItemIDs.add("six");
 
 
         listView = findViewById(R.id.listview);
+
         billingClient = BillingClient
                 .newBuilder(this)
                 .enablePendingPurchases()
@@ -103,7 +108,7 @@ public class MainActivity extends AppCompatActivity implements PurchasesUpdatedL
                         initiatePurchase(purchaseItemIDs.get(i));
                         billingClient.queryPurchasesAsync(
                                 QueryPurchasesParams.newBuilder()
-                                        .setProductType(BillingClient.ProductType.SUBS)
+                                        .setProductType(BillingClient.ProductType.INAPP)
                                         .build(),
                                 new PurchasesResponseListener() {
                                     public void onQueryPurchasesResponse(@NonNull BillingResult billingResult, @NonNull List purchases) {
@@ -123,12 +128,14 @@ public class MainActivity extends AppCompatActivity implements PurchasesUpdatedL
                 }
             });
         });
+
+
     }
 
     public void notifyList() {
         purchaseItemDisplay.clear();
         for (String next : purchaseItemIDs) {
-            purchaseItemDisplay.add(getPurchaseCountValueFromPref(next)+ " Cups of "+next + " Consumed " );
+            purchaseItemDisplay.add(getPurchaseCountValueFromPref(next) + " Cups of " + next + " Consumed ");
         }
         this.arrayAdapter.notifyDataSetChanged();
     }
@@ -150,43 +157,38 @@ public class MainActivity extends AppCompatActivity implements PurchasesUpdatedL
     }
 
     public void initiatePurchase(final String str) {
-        QueryProductDetailsParams queryProductDetailsParams =
+
+        billingClient.queryProductDetailsAsync(
                 QueryProductDetailsParams
                         .newBuilder()
                         .setProductList(
                                 ImmutableList.of(
-                                        QueryProductDetailsParams.Product.newBuilder()
+                                        QueryProductDetailsParams
+                                                .Product
+                                                .newBuilder()
                                                 .setProductId(str)
-                                                .setProductType(BillingClient.ProductType.SUBS)
+                                                .setProductType(BillingClient.ProductType.INAPP)
                                                 .build()))
-                        .build();
-
-        billingClient.queryProductDetailsAsync(
-                queryProductDetailsParams,
+                        .build(),
                 (billingResult, productDetailsList) -> {
                     if (billingResult.getResponseCode() != 0) {
-                        Log.e("billingResult"," Error " + billingResult.getDebugMessage());
-                    } else if (productDetailsList == null || productDetailsList.size() <= 0) {
+                        Log.e("billingResult", " Error " + billingResult.getDebugMessage());
+                    } else if (productDetailsList.size() <= 0) {
                         Log.e("skuDetailsList", "Purchase Item " + str + " not Found");
                     } else {
-                        Log.i( "ZERO MF","more than zero  "+productDetailsList.size());
-                        for (int i=0;i<productDetailsList.size();i++){
-                            BillingFlowParams billingFlowParams = BillingFlowParams.newBuilder()
-                                    .setProductDetailsParamsList(ImmutableList.of(
-                                            BillingFlowParams.ProductDetailsParams.newBuilder()
-                                                    // retrieve a value for "productDetails" by calling queryProductDetailsAsync()
-                                                    .setProductDetails(productDetailsList.get(i))
-                                                    // to get an offer token, call ProductDetails.getSubscriptionOfferDetails()
-                                                    // for a list of offers that are available to the user
-                                                    .setOfferToken(productDetailsList.get(i).getSubscriptionOfferDetails().get(i).getOfferToken())
-                                                    .build()
-                                    ))
-                                    .build();
-
-                            // Launch the billing flow
-                            billingClient.launchBillingFlow(MainActivity.this, billingFlowParams);
-
-                        }
+                        productDetailsList.get(0);
+                        Log.i("ZERO MF", "more than zero  " + productDetailsList.get(0).toString());
+                        billingClient.launchBillingFlow(MainActivity.this, BillingFlowParams.newBuilder()
+                                .setProductDetailsParamsList(ImmutableList
+                                        .of(
+                                                BillingFlowParams
+                                                        .ProductDetailsParams
+                                                        .newBuilder()
+                                                        // retrieve a value for "productDetails" by calling queryProductDetailsAsync()
+                                                        .setProductDetails(productDetailsList.get(0))
+                                                        .build()
+                                        ))
+                                .build());
 
                     }
                 }
@@ -200,19 +202,17 @@ public class MainActivity extends AppCompatActivity implements PurchasesUpdatedL
                 && list != null) {
             handlePurchases(list);
         } else if (billingResult.getResponseCode() == 7) {
-           this.billingClient.queryPurchasesAsync(
+            this.billingClient.queryPurchasesAsync(
                     QueryPurchasesParams.newBuilder()
-                            .setProductType(BillingClient.ProductType.SUBS)
+                            .setProductType(BillingClient.ProductType.INAPP)
                             .build(),
-                    new PurchasesResponseListener() {
-                        public void onQueryPurchasesResponse(@NonNull BillingResult billingResult, @NonNull List purchases) {
-                            // check billingResult
-                            // process returned purchase list, e.g. display the plans user owns
-                            if (purchases != null) {
-                                handlePurchases(purchases);
-                            }
-
+                    (billingResult1, purchases) -> {
+                        // check billingResult
+                        // process returned purchase list, e.g. display the plans user owns
+                        if (purchases != null) {
+                            handlePurchases(purchases);
                         }
+
                     }
             );
 
@@ -225,41 +225,28 @@ public class MainActivity extends AppCompatActivity implements PurchasesUpdatedL
 
     public void handlePurchases(List<Purchase> list) {
         for (Purchase next : list) {
-            final int indexOf = purchaseItemIDs.indexOf(next.getPurchaseToken());
-            if (indexOf > -1) {
-                if (next.getPurchaseState() == 1) {
-                    if (!verifyValidSignature(next.getOriginalJson(), next.getSignature())) {
-                        Toast.makeText(getApplicationContext(), "Error : Invalid Purchase", Toast.LENGTH_SHORT).show();
-                    } else if (!next.isAcknowledged()) {
-                        AcknowledgePurchaseParams acknowledgePurchaseParams =
-                                AcknowledgePurchaseParams.newBuilder()
-                                        .setPurchaseToken(next.getPurchaseToken())
-                                        .build();
-                        billingClient.acknowledgePurchase(acknowledgePurchaseParams, new AcknowledgePurchaseResponseListener() {
-                            @Override
-                            public void onAcknowledgePurchaseResponse(@NonNull BillingResult billingResult) {
-                                if (billingResult.getResponseCode() == 0) {
-                                    savePurchaseCountValueToPref(purchaseItemIDs.get(indexOf), getPurchaseCountValueFromPref(purchaseItemIDs.get(indexOf)) + 1);
-                                    Toast.makeText(getApplicationContext(), "Item " + purchaseItemIDs.get(indexOf) + "Consumed", Toast.LENGTH_SHORT).show();
-                                    MainActivity.this.notifyList();
-                                }
-                            }
-                        });
-                    }
-                } else if (next.getPurchaseState() == 2) {
-                    Toast.makeText(getApplicationContext(), purchaseItemIDs.get(indexOf) + " Purchase is Pending. Please complete Transaction", Toast.LENGTH_SHORT).show();
-                } else if (next.getPurchaseState() == 0) {
-                    Toast.makeText(getApplicationContext(), purchaseItemIDs.get(indexOf) + " Purchase Status Unknown", Toast.LENGTH_SHORT).show();
+            if (next.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
+                if (!next.isAcknowledged()) {
+                    AcknowledgePurchaseParams acknowledgePurchaseParams =
+                            AcknowledgePurchaseParams.newBuilder()
+                                    .setPurchaseToken(next.getPurchaseToken())
+                                    .build();
+                    billingClient.acknowledgePurchase(acknowledgePurchaseParams, billingResult -> {
+                        if (billingResult.getResponseCode() == 0) {
+                            startActivity(new Intent(MainActivity.this, ResurceActivity.class));
+                            finish();
+                            savePurchaseCountValueToPref(purchaseItemIDs.get(0), getPurchaseCountValueFromPref(purchaseItemIDs.get(0)) + 1);
+                            Toast.makeText(getApplicationContext(), "Item " + purchaseItemIDs.get(0) + "Consumed", Toast.LENGTH_SHORT).show();
+                            MainActivity.this.notifyList();
+                        }
+                    });
                 }
+            } else if (next.getPurchaseState() == 2) {
+                Toast.makeText(getApplicationContext(), purchaseItemIDs.get(0) + " Purchase is Pending. Please complete Transaction", Toast.LENGTH_SHORT).show();
+            } else if (next.getPurchaseState() == 0) {
+                Toast.makeText(getApplicationContext(), purchaseItemIDs.get(0) + " Purchase Status Unknown", Toast.LENGTH_SHORT).show();
             }
-        }
-    }
 
-    private boolean verifyValidSignature(String str, String str2) {
-        try {
-            return Sec.verifyPurchase(getString(R.string.lic), str, str2);
-        } catch (IOException unused) {
-            return false;
         }
     }
 
