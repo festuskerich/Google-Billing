@@ -1,4 +1,4 @@
-package com.kericho.myapplication;
+package com.kericho.designstudio;
 
 import org.junit.Test;
 

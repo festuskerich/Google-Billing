@@ -1,16 +1,14 @@
-package com.kericho.myapplication;
+package com.kericho.designstudio;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.ListView;
 import android.widget.Toast;
 
 import com.android.billingclient.api.AcknowledgePurchaseParams;
@@ -32,30 +30,175 @@ public class MainActivity extends AppCompatActivity implements PurchasesUpdatedL
 
 
     public static final String PREF_FILE = "MyPref";
-    private static final ArrayList<String> purchaseItemDisplay = new ArrayList<>();
     public static ArrayList<String> purchaseItemIDs = new ArrayList<>();
 
-
-    ArrayAdapter<String> arrayAdapter;
     public BillingClient billingClient;
-    ListView listView;
+    CardView cardView;
+    CardView cardView1;
+    CardView cardView2;
+    CardView cardView3;
 
-
+    @SuppressLint("MissingInflatedId")
     public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
         setContentView(R.layout.activity_main);
-        purchaseItemIDs.clear();
-        purchaseItemIDs.add("exel");
-        purchaseItemIDs.add("one");
-        purchaseItemIDs.add("prem");
-        purchaseItemIDs.add("two");
-        purchaseItemIDs.add("three");
-        purchaseItemIDs.add("four");
-        purchaseItemIDs.add("five");
-        purchaseItemIDs.add("six");
 
+        cardView = findViewById(R.id.one);
+        cardView1 = findViewById(R.id.two);
+        cardView2 = findViewById(R.id.three);
+        cardView3 = findViewById(R.id.four);
 
-        listView = findViewById(R.id.listview);
+        //one
+        //exel
+        //prem
+        //two
+        cardView.setOnClickListener(v -> {
+            if (billingClient.isReady()) {
+                initiatePurchase("one");
+                return;
+            }
+            billingClient.startConnection(new BillingClientStateListener() {
+                @Override
+                public void onBillingServiceDisconnected() {
+                }
+
+                @Override
+                public void onBillingSetupFinished(@NonNull BillingResult billingResult) {
+                    if (billingResult.getResponseCode() == 0) {
+                        initiatePurchase("one");
+                        billingClient.queryPurchasesAsync(
+                                QueryPurchasesParams.newBuilder()
+                                        .setProductType(BillingClient.ProductType.INAPP)
+                                        .build(),
+                                new PurchasesResponseListener() {
+                                    public void onQueryPurchasesResponse(@NonNull BillingResult billingResult, @NonNull List purchases) {
+                                        // check billingResult
+                                        // process returned purchase list, e.g. display the plans user owns
+                                        if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                                            handlePurchases(purchases);
+                                        }
+
+                                    }
+                                }
+                        );
+
+                        return;
+                    }
+                    Toast.makeText(getApplicationContext(), "Error " + billingResult.getDebugMessage(), Toast.LENGTH_LONG).show();
+                }
+            });
+        });
+
+        cardView1.setOnClickListener(v -> {
+            if (billingClient.isReady()) {
+                initiatePurchase("exel");
+                return;
+            }
+            billingClient.startConnection(new BillingClientStateListener() {
+                @Override
+                public void onBillingServiceDisconnected() {
+                }
+
+                @Override
+                public void onBillingSetupFinished(@NonNull BillingResult billingResult) {
+                    if (billingResult.getResponseCode() == 0) {
+                        initiatePurchase("exel");
+                        billingClient.queryPurchasesAsync(
+                                QueryPurchasesParams.newBuilder()
+                                        .setProductType(BillingClient.ProductType.INAPP)
+                                        .build(),
+                                new PurchasesResponseListener() {
+                                    public void onQueryPurchasesResponse(@NonNull BillingResult billingResult, @NonNull List purchases) {
+                                        // check billingResult
+                                        // process returned purchase list, e.g. display the plans user owns
+                                        if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                                            handlePurchases(purchases);
+                                        }
+
+                                    }
+                                }
+                        );
+
+                        return;
+                    }
+                    Toast.makeText(getApplicationContext(), "Error " + billingResult.getDebugMessage(), Toast.LENGTH_LONG).show();
+                }
+            });
+        });
+
+        cardView2.setOnClickListener(v -> {
+            if (billingClient.isReady()) {
+                initiatePurchase("prem");
+                return;
+            }
+            billingClient.startConnection(new BillingClientStateListener() {
+                @Override
+                public void onBillingServiceDisconnected() {
+                }
+
+                @Override
+                public void onBillingSetupFinished(@NonNull BillingResult billingResult) {
+                    if (billingResult.getResponseCode() == 0) {
+                        initiatePurchase("prem");
+                        billingClient.queryPurchasesAsync(
+                                QueryPurchasesParams.newBuilder()
+                                        .setProductType(BillingClient.ProductType.INAPP)
+                                        .build(),
+                                new PurchasesResponseListener() {
+                                    public void onQueryPurchasesResponse(@NonNull BillingResult billingResult, @NonNull List purchases) {
+                                        // check billingResult
+                                        // process returned purchase list, e.g. display the plans user owns
+                                        if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                                            handlePurchases(purchases);
+                                        }
+
+                                    }
+                                }
+                        );
+
+                        return;
+                    }
+                    Toast.makeText(getApplicationContext(), "Error " + billingResult.getDebugMessage(), Toast.LENGTH_LONG).show();
+                }
+            });
+        });
+
+        cardView3.setOnClickListener(v -> {
+            if (billingClient.isReady()) {
+                initiatePurchase("two");
+                return;
+            }
+            billingClient.startConnection(new BillingClientStateListener() {
+                @Override
+                public void onBillingServiceDisconnected() {
+                }
+
+                @Override
+                public void onBillingSetupFinished(@NonNull BillingResult billingResult) {
+                    if (billingResult.getResponseCode() == 0) {
+                        initiatePurchase("two");
+                        billingClient.queryPurchasesAsync(
+                                QueryPurchasesParams.newBuilder()
+                                        .setProductType(BillingClient.ProductType.INAPP)
+                                        .build(),
+                                new PurchasesResponseListener() {
+                                    public void onQueryPurchasesResponse(@NonNull BillingResult billingResult, @NonNull List purchases) {
+                                        // check billingResult
+                                        // process returned purchase list, e.g. display the plans user owns
+                                        if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                                            handlePurchases(purchases);
+                                        }
+
+                                    }
+                                }
+                        );
+
+                        return;
+                    }
+                    Toast.makeText(getApplicationContext(), "Error " + billingResult.getDebugMessage(), Toast.LENGTH_LONG).show();
+                }
+            });
+        });
 
         billingClient = BillingClient
                 .newBuilder(this)
@@ -88,57 +231,10 @@ public class MainActivity extends AppCompatActivity implements PurchasesUpdatedL
                 );
             }
         });
-        ArrayAdapter<String> arrayAdapter2 = new ArrayAdapter<>(this, R.layout.item, purchaseItemDisplay);
-        this.arrayAdapter = arrayAdapter2;
-        this.listView.setAdapter(arrayAdapter2);
-        notifyList();
-        listView.setOnItemClickListener((adapterView, view, i, j) -> {
-            if (billingClient.isReady()) {
-                initiatePurchase(purchaseItemIDs.get(i));
-                return;
-            }
-            billingClient.startConnection(new BillingClientStateListener() {
-                @Override
-                public void onBillingServiceDisconnected() {
-                }
-
-                @Override
-                public void onBillingSetupFinished(@NonNull BillingResult billingResult) {
-                    if (billingResult.getResponseCode() == 0) {
-                        initiatePurchase(purchaseItemIDs.get(i));
-                        billingClient.queryPurchasesAsync(
-                                QueryPurchasesParams.newBuilder()
-                                        .setProductType(BillingClient.ProductType.INAPP)
-                                        .build(),
-                                new PurchasesResponseListener() {
-                                    public void onQueryPurchasesResponse(@NonNull BillingResult billingResult, @NonNull List purchases) {
-                                        // check billingResult
-                                        // process returned purchase list, e.g. display the plans user owns
-                                        if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                                            handlePurchases(purchases);
-                                        }
-
-                                    }
-                                }
-                        );
-
-                        return;
-                    }
-                    Toast.makeText(getApplicationContext(), "Error " + billingResult.getDebugMessage(), Toast.LENGTH_LONG).show();
-                }
-            });
-        });
 
 
     }
 
-    public void notifyList() {
-        purchaseItemDisplay.clear();
-        for (String next : purchaseItemIDs) {
-            purchaseItemDisplay.add(getPurchaseCountValueFromPref(next) + " Cups of " + next + " Consumed ");
-        }
-        this.arrayAdapter.notifyDataSetChanged();
-    }
 
     private SharedPreferences getPreferenceObject() {
         return getApplicationContext().getSharedPreferences(PREF_FILE, 0);
@@ -209,9 +305,7 @@ public class MainActivity extends AppCompatActivity implements PurchasesUpdatedL
                     (billingResult1, purchases) -> {
                         // check billingResult
                         // process returned purchase list, e.g. display the plans user owns
-                        if (purchases != null) {
-                            handlePurchases(purchases);
-                        }
+                        handlePurchases(purchases);
 
                     }
             );
@@ -237,7 +331,7 @@ public class MainActivity extends AppCompatActivity implements PurchasesUpdatedL
                             finish();
                             savePurchaseCountValueToPref(purchaseItemIDs.get(0), getPurchaseCountValueFromPref(purchaseItemIDs.get(0)) + 1);
                             Toast.makeText(getApplicationContext(), "Item " + purchaseItemIDs.get(0) + "Consumed", Toast.LENGTH_SHORT).show();
-                            MainActivity.this.notifyList();
+                           // MainActivity.this.notifyList();
                         }
                     });
                 }

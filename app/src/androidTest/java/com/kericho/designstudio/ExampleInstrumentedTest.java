@@ -1,4 +1,4 @@
-package com.kericho.myapplication;
+package com.kericho.designstudio;
 
 import android.content.Context;
 

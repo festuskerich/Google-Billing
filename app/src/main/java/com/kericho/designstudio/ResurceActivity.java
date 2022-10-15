@@ -1,4 +1,4 @@
-package com.kericho.myapplication;
+package com.kericho.designstudio;
 
 import androidx.appcompat.app.AppCompatActivity;
 

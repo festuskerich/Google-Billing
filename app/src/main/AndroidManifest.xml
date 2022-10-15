@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.kericho.myapplication">
+    package="com.kericho.designstudio">
 
     <uses-permission android:name="com.android.vending.BILLING" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -13,13 +13,13 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FerodaJuice">
         <activity
-            android:name=".ResurceActivity"
+            android:name="com.kericho.designstudio.ResurceActivity"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
+            android:name="com.kericho.designstudio.MainActivity"
             android:exported="true" />
         <activity
-            android:name=".Splash"
+            android:name="com.kericho.designstudio.Splash"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

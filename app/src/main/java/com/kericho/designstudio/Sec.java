@@ -1,4 +1,4 @@
-package com.kericho.myapplication;
+package com.kericho.designstudio;
 
 import android.text.TextUtils;
 import android.util.Base64;
@@ -42,10 +42,7 @@ public class Sec {
                 Signature instance = Signature.getInstance(SIGNATURE_ALGORITHM);
                 instance.initVerify(publicKey);
                 instance.update(str.getBytes());
-                if (!instance.verify(decode)) {
-                    return false;
-                }
-                return true;
+                return instance.verify(decode);
             } catch (NoSuchAlgorithmException e) {
                 throw new RuntimeException(e);
             } catch (InvalidKeyException | SignatureException unused) {
